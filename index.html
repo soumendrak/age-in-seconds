@@ -38,14 +38,20 @@ h1 {
     font-weight: 200; opacity: 0.5; margin-bottom: 0.25rem;
 }
 .tagline { color: var(--text-muted); font-size: 0.7rem; margin-bottom: 1.5rem; }
-.birth-input { margin-bottom: 1.5rem; }
-.birth-input label { display: block; color: var(--text-dim); font-size: 0.85rem; margin-bottom: 0.5rem; }
-.birth-input input[type="date"] {
+.dob-section { margin-bottom: 1.5rem; }
+.dob-section .dob-hidden { display: none; }
+.dob-input-group label { display: block; color: var(--text-dim); font-size: 0.85rem; margin-bottom: 0.5rem; }
+.dob-input-group input[type="date"] {
     background: var(--bg); border: 1px solid var(--text-muted); color: var(--text);
     padding: 0.6rem 1rem; border-radius: var(--radius-sm); font-family: var(--font);
     font-size: 1rem; width: 100%; max-width: 220px; cursor: pointer;
 }
-.birth-input input[type="date"]:focus { outline: none; border-color: var(--accent); }
+.dob-input-group input[type="date"]:focus { outline: none; border-color: var(--accent); }
+.dob-set-indicator { display: none; color: var(--text-dim); font-size: 0.8rem; }
+.dob-set-indicator .edit-dob { color: var(--accent); cursor: pointer; text-decoration: underline; margin-left: 0.5rem; }
+.dob-set-indicator .edit-dob:hover { color: var(--accent-light); }
+.dob-section.dob-hidden .dob-input-group { display: none; }
+.dob-section.dob-hidden .dob-set-indicator { display: inline-block; }
 .counter-display {
     background: var(--bg); border-radius: var(--radius-md);
     padding: 1.5rem; margin-bottom: 1rem;
@@ -84,9 +90,14 @@ footer a:hover { color: var(--accent); }
 <div class="container">
     <h1>Age in Seconds</h1>
     <p class="tagline">Your life measured in moments</p>
-    <div class="birth-input">
-        <label for="dob">Date of Birth</label>
-        <input type="date" id="dob">
+    <div class="dob-section" id="dobSection">
+        <div class="dob-input-group">
+            <label for="dob">Date of Birth</label>
+            <input type="date" id="dob">
+        </div>
+        <div class="dob-set-indicator" id="dobIndicator">
+            DOB set ✓ <span class="edit-dob" id="editDob">change</span>
+        </div>
     </div>
     <div class="counter-display">
         <div class="seconds" id="secondsDisplay">0</div>
@@ -121,6 +132,19 @@ const $seconds = document.getElementById('secondsDisplay');
 const $heartbeats = document.getElementById('heartbeats');
 const $breaths = document.getElementById('breaths');
 const $toggle = document.getElementById('toggleBtn');
+const $dobSection = document.getElementById('dobSection');
+const $editDob = document.getElementById('editDob');
+
+function hideDobInput() {
+    if ($dob.value) $dobSection.classList.add('dob-hidden');
+}
+
+function showDobInput() {
+    $dobSection.classList.remove('dob-hidden');
+    $dob.focus();
+}
+
+$editDob.addEventListener('click', showDobInput);
 
 function getAgeInSeconds(birthDate) {
     return Math.floor((Date.now() - birthDate.getTime()) / 1000);
@@ -165,19 +189,22 @@ document.getElementById('resetBtn').addEventListener('click', function() {
     const m = String(today.getMonth() + 1).padStart(2, '0');
     const d = String(today.getDate()).padStart(2, '0');
     $dob.value = y + '-' + m + '-' + d;
+    localStorage.setItem('ais_dob', $dob.value);
     if (!running) { running = true; $toggle.textContent = '⏸ Pause'; $toggle.classList.add('active'); }
+    hideDobInput();
     updateDisplay();
 });
 
 $dob.addEventListener('change', function() {
     if (this.value) localStorage.setItem('ais_dob', this.value);
     if (!running) { running = true; $toggle.textContent = '⏸ Pause'; $toggle.classList.add('active'); }
+    hideDobInput();
     updateDisplay();
 });
 
 // Restore
 const saved = localStorage.getItem('ais_dob');
-if (saved) $dob.value = saved;
+if (saved) { $dob.value = saved; hideDobInput(); }
 startCounter();
 updateDisplay();
 </script>
